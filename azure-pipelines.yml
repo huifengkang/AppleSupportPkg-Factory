@@ -93,7 +93,7 @@ steps:
     script: |
       #!/bin/bash
       cd ../b
-      git clone https://github.com/acidanthera/AppleSupportPkg.git
+      git clone https://github.com/acidanthera/AppleSupportPkg
       cd AppleSupportPkg
       # Patch Build Tool
       sed -i -e 's/--depth=1 //' macbuild.tool
