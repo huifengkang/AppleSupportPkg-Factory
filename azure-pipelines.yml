@@ -163,9 +163,9 @@ steps:
   inputs:
     script: |
       git config --global credential.helper store
-      echo https://$(PAT):x-oauth-basic@github.com >> ~/.git-credentials
-      git config --global user.email $(Email)
-      git config --global user.name $(User)
+      echo https://${PAT}:x-oauth-basic@github.com >> ~/.git-credentials
+      git config --global user.email $Email
+      git config --global user.name $User
       cd ../b/RepoOperation/$(repo)
       git add .
       git commit -m "Refresh Commits to $(BuildDate)"
