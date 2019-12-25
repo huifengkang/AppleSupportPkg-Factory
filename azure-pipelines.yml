@@ -111,9 +111,9 @@ steps:
   inputs:
     script: |
       cd ../b/AppleSupportPkg
-      mkdir ../../a/OC
-      cp UDK/Build/AppleSupportPkg/DEBUG*/X64/AppleSupport*.zip ../../a/OC
-      cp UDK/Build/AppleSupportPkg/RELEASE*/X64/AppleSupport*.zip ../../a/OC
+      mkdir ../../a/AppleSupportPkg
+      cp UDK/Build/AppleSupportPkg/DEBUG*/X64/AppleSupport*.zip ../../a/AppleSupportPkg
+      cp UDK/Build/AppleSupportPkg/RELEASE*/X64/AppleSupport*.zip ../../a/AppleSupportPkg
 - task: Bash@3
   condition: and(succeeded(), or(eq(variables['BuildCheck'], 'True'), ne(variables['Build.SourceBranch'], 'refs/heads/master')))
   displayName: Get Commit Notes
