@@ -195,7 +195,7 @@ steps:
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['BuildCheck'], 'True'))
   displayName: 'Publish GitHub Release'
   inputs:
-    gitHubConnection: 'personal token'
+    gitHubConnection: 'athlonreg'
     repositoryName: '$(Build.Repository.Name)'
     action: 'edit'
     target: '$(Build.SourceVersion)'
