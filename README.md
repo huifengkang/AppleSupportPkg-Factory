@@ -6,7 +6,7 @@
 ## Languages
 
 - **English (Current)**
-- [简体中文](https://github.com/athlonreg/AppleSupportPkg-Factory/blob/master/README_zh-Hans.md)
+- [简体中文](https://github.com/athlonreg/AppleSupportPkg-Factory/blob/master/README_CN.md)
 
 ## **WARNING⚠️**
 

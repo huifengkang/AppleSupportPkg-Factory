@@ -30,7 +30,7 @@
 
 ### 下载
 
-👉 [![Release](https://img.shields.io/github/v/release/williambj1/OpenCore-Factory?color=orange&include_prereleases&label=Release)](https://github.com/williambj1/OpenCore-Factory/releases) 👈
+👉 [![Release](https://img.shields.io/github/v/release/athlonreg/AppleSupportPkg-Factory?color=orange&include_prereleases&label=Release)](https://github.com/athlonreg/AppleSupportPkg-Factory/releases) 👈
 
 > 点击上面的标签下载
 >
@@ -39,7 +39,7 @@
 ## Credits
 
 - Acidanthera
-  - OpenCorePkg
+  - AppleSupportPkg
   - OCSupportPkg
   - EfiPkg
 
