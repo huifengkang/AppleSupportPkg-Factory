@@ -38,7 +38,7 @@ steps:
       BD="$(date +"%Y-%m-%d")"
       echo "##vso[task.setvariable variable=BuildDate]$BD"
       cd ../b || exit 1
-      mkdir "RepoOperation"
+      mkdir -p "RepoOperation"
       cd "RepoOperation" || exit 1
       repo=$(repo)
       git clone "https://github.com/athlonreg/$repo.git"
@@ -50,7 +50,7 @@ steps:
       # Clean SHA History Folder
       if [ "$(basename "$repo"/Commits/20*)" != "$BD" ]; then
         rm -rf "$repo"/Commits/20*
-        mkdir "$repo"/Commits/"$BD"
+        mkdir -p "$repo"/Commits/"$BD"
         cp "$repo"/Commits/*.sha1 "$repo"/Commits/"$BD"
       fi
       # Check and Update commit SHA
@@ -111,7 +111,7 @@ steps:
   inputs:
     script: |
       cd ../b/AppleSupportPkg
-      mkdir ../../a/AppleSupportPkg
+      mkdir -p ../../a/AppleSupportPkg
       cp UDK/Build/AppleSupportPkg/DEBUG*/X64/AppleSupport*.zip ../../a/AppleSupportPkg
       cp UDK/Build/AppleSupportPkg/RELEASE*/X64/AppleSupport*.zip ../../a/AppleSupportPkg
 - task: Bash@3
