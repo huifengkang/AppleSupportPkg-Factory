@@ -1,5 +1,4 @@
 # AppleSupportPkg Releases
-
 trigger: none
 pr: none
 
@@ -14,21 +13,12 @@ schedules:
 variables:
   repo: 'AppleSupportPkg-Factory'
   BuildCheck: 'False'
-  FORCE_INSTALL: 1
-  DEBUG: 0
 
 pool:
   vmImage: 'macOS-10.14'
 
 steps:
-- task: Bash@3
-  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
-  displayName: Set Debug Variables
-  inputs:
-    targetType: 'inline'
-    script: |
-      #!/bin/bash
-      echo "##vso[task.setvariable variable=DEBUG]1"
+
 - task: Bash@3
   displayName: Check Changes
   inputs:
@@ -42,22 +32,21 @@ steps:
       cd "RepoOperation" || exit 1
       repo=$(repo)
       git clone "https://github.com/athlonreg/$repo.git"
-      if [ $DEBUG == 1 ]; then
-        cd $repo || exit 1
-        git checkout $(Build.SourceBranchName)
-        cd ../
-      fi
+      
       # Clean SHA History Folder
       if [ "$(basename "$repo"/Commits/20*)" != "$BD" ]; then
         rm -rf "$repo"/Commits/20*
         mkdir -p "$repo"/Commits/"$BD"
         cp "$repo"/Commits/*.sha1 "$repo"/Commits/"$BD"
       fi
+
       # Check and Update commit SHA
       function CPSHA() {
+
         declare "${1}"Latest="$(git ls-remote https://github.com/acidanthera/"${2}"Pkg.git HEAD | cut -c1-40)"
         declare "${1}"Previous="$(<"$repo"/Commits/"${1}".sha1)"
         declare "${1}"Tdy="$(<"$repo"/Commits/"$BD"/"${1}".sha1)"
+
         local Latest
         Latest="$(eval echo \$"${1}"Latest)"
         local Previous
@@ -65,6 +54,7 @@ steps:
         local Tdy
         Tdy="$(eval echo \$"${1}"Tdy)"
         printf "${1}Tdy:$Tdy \n${1}Latest:$Latest \n${1}Previous:$Previous\n"
+
         ## Azure's cross task variables can't be stored by variables
         if [ "${1}" == "AppleSupport" ]; then
           echo "##vso[task.setvariable variable=AppleSupportcmt]$Tdy"
@@ -73,18 +63,21 @@ steps:
         elif [ "${1}" == "Efi" ]; then
           echo "##vso[task.setvariable variable=Eficmt]$Tdy"
         fi
+
         if [ "$Previous" != "$Latest" ]; then
             rm -rf "$repo"/Commits/"${1}".sha1
             echo "Changes found in ${2}Pkg"
             echo "$Latest" >> "${repo}/Commits/"${1}".sha1"
             echo "##vso[task.setvariable variable=BuildCheck]True"
         fi
+
         printf "\n"
       }
       
       CPSHA AppleSupport AppleSupport
       CPSHA OcSupport OcSupport
       CPSHA Efi Efi
+
 - task: Bash@3
   condition: or(eq(variables['BuildCheck'], 'True'), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
   displayName: Build AppleSupport
@@ -95,16 +88,29 @@ steps:
       cd ../b
       git clone https://github.com/acidanthera/AppleSupportPkg
       cd AppleSupportPkg
+
       # Patch Build Tool
-      sed -i -e 's/--depth=1 //' macbuild.tool
-      sed -i -e 's/.dsc/.dsc \| xcpretty/g' macbuild.tool
-      sed -i -e 's/updaterepo "https\:\/\/github.com\/acidanthera\/audk" UDK master || exit 1/git clone https\:\/\/github.com\/acidanthera\/audk --depth=1 UDK || exit 1/' macbuild.tool
-      if [ $DEBUG == 1 ]; then
-        ./macbuild.tool --skip-build --skip-package --skip-tests
-      else
-        ./macbuild.tool
-      fi
+
+      curl -# -L -O "https://raw.githubusercontent.com/acidanthera/ocbuild/master/efibuild.sh"
+      chmod +x efibuild.sh
       
+      sed -i -e 's/--depth=1/--depth=30/g' efibuild.sh
+      sed -i -e 's/.dsc"/.dsc" \| xcpretty/g' efibuild.sh
+      sed -i -e 's/updaterepo "https\:\/\/github.com\/acidanthera\/audk" UDK master || exit 1/git clone https\:\/\/github.com\/acidanthera\/audk --depth=1 UDK || exit 1/' efibuild.sh
+      sed -i -e 's/src=.*/src=\$\(cat efibuild.sh\) \&\& eval \"\$src\" \|\| exit 1/g' macbuild.tool
+      
+      ./macbuild.tool --skip-build --skip-package --skip-tests
+
+      # sed -i -e 's/--depth=1 //' macbuild.tool
+      # sed -i -e 's/.dsc/.dsc \| xcpretty/g' macbuild.tool
+      # sed -i -e 's/updaterepo "https\:\/\/github.com\/acidanthera\/audk" UDK master || exit 1/git clone https\:\/\/github.com\/acidanthera\/audk --depth=1 UDK || exit 1/' macbuild.tool
+      # if [ $DEBUG == 1 ]; then
+      #   ./macbuild.tool --skip-build --skip-package --skip-tests
+      # else
+      #   ./macbuild.tool
+      # fi
+
+
 - task: CmdLine@2
   condition: and(succeeded(), eq(variables['BuildCheck'], 'True'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
   displayName: Move Binaries
@@ -114,6 +120,7 @@ steps:
       mkdir -p ../../a/AppleSupportPkg
       cp UDK/Build/AppleSupportPkg/DEBUG*/X64/AppleSupport*.zip ../../a/AppleSupportPkg
       cp UDK/Build/AppleSupportPkg/RELEASE*/X64/AppleSupport*.zip ../../a/AppleSupportPkg
+
 - task: Bash@3
   condition: and(succeeded(), or(eq(variables['BuildCheck'], 'True'), ne(variables['Build.SourceBranch'], 'refs/heads/master')))
   displayName: Get Commit Notes
@@ -122,11 +129,16 @@ steps:
     script: |
       #!/bin/bash
       ToMD="$(pwd)/../a/ReleaseNotes.md"
+
       echo "## Changes" >> $ToMD
+
       cd ../b/AppleSupportPkg/UDK || exit 1
+
       # Get Commit Notes as Release Notes
       function GNotes() {
+
         cd "${2}"Pkg || exit 1
+
         ## Azure's cross task variables can't be called by variables
         if [ "${1}" == "AppleSupport" ]; then
           TMPcmt=$(AppleSupportcmt)
@@ -135,9 +147,11 @@ steps:
         elif [ "${1}" == "Efi" ]; then
           TMPcmt=$(Eficmt)
         fi
+
         declare "${1}"count="$(git rev-list --count $TMPcmt..HEAD)"
         local Count
         Count=$(eval echo \$"${1}"count)
+
         if [ "$Count" != 0 ]; then
           declare "${1}"note="$(git log -"$Count" --format=" - %s %n")"
           local Note
@@ -148,9 +162,11 @@ steps:
         fi
         cd ../
       }
+
       GNotes AppleSupport AppleSupport
       GNotes OcSupport OcSupport
       GNotes Efi Efi
+
       # Reformat Release Notes
       ## An extremely dirty solution to solve Azure's buggy bash line wrap
       sed -i -e $'s/ -/\\\n-/g' $ToMD
@@ -170,26 +186,7 @@ steps:
       git add .
       git commit -m "Refresh Commits to $(BuildDate)"
       git push origin master
-#- task: CmdLine@2
-#  condition: eq(variables['BuildCheck'], 'True')
-#  displayName: Publish Gitee Mirror
-#  inputs:
-#    script: |
-#      rm -rf ~/.gitconfig
-#      rm -rf ~/.git-credentials
-#      git config --global credential.helper store
-#      git config --global user.email $(Email)
-#      git config --global user.name $(User)
-#      cd ../b
-#      git clone https://athlonreg:$(GiteePAT)@gitee.com/athlonreg/$(repo).git
-#      cd $(repo)
-#      rm -rf AppleSupport-Build/*
-#      cp -R $(Build.ArtifactStagingDirectory)/AppleSupportPkg/AppleSupport*.zip AppleSupport-Build
-#      cp -R $(Build.ArtifactStagingDirectory)/ReleaseNotes.md AppleSupport-Build
-#      mv AppleSupport-Build/ReleaseNotes.md AppleSupport-Build/README.md
-#      git add .
-#      git commit -m "AppleSupport-Build-$(BuildDate)"
-#      git push origin master
+
 
 - task: GitHubRelease@0
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['BuildCheck'], 'True'))
